@@ -1,9 +1,18 @@
 package be.niob.apps.scs;
 
+import java.io.InputStream;
+
+import com.google.android.imageloader.ImageLoader;
+
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.Context;
 import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.provider.ContactsContract.Contacts;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
@@ -13,7 +22,9 @@ import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 public class ContactListFragment extends ListFragment implements
 		LoaderManager.LoaderCallbacks<Cursor> {
@@ -55,8 +66,8 @@ public class ContactListFragment extends ListFragment implements
 		setHasOptionsMenu(true);
 
 		// Create an empty adapter we will use to display the loaded data.
-		mAdapter = new SimpleCursorAdapter(getActivity(),
-				android.R.layout.simple_list_item_2, null, new String[] {
+		mAdapter = new ContactCursorAdapter(getActivity(),
+				R.layout.contact_list_item, null, new String[] {
 						Contacts.DISPLAY_NAME, Contacts.CONTACT_STATUS },
 				new int[] { android.R.id.text1, android.R.id.text2 }, 0);
 		setListAdapter(mAdapter);
@@ -84,8 +95,12 @@ public class ContactListFragment extends ListFragment implements
 
 	// These are the Contacts rows that we will retrieve.
 	static final String[] CONTACTS_SUMMARY_PROJECTION = new String[] {
-			Contacts._ID, Contacts.DISPLAY_NAME, Contacts.CONTACT_STATUS,
-			Contacts.CONTACT_PRESENCE, Contacts.PHOTO_ID, Contacts.LOOKUP_KEY, };
+			Contacts._ID, 
+			Contacts.DISPLAY_NAME, 
+			Contacts.CONTACT_STATUS,
+			Contacts.CONTACT_PRESENCE, 
+			Contacts.PHOTO_ID, 
+			Contacts.LOOKUP_KEY, };
 
 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 		// This is called when a new Loader needs to be created. This
@@ -121,6 +136,52 @@ public class ContactListFragment extends ListFragment implements
 		// above is about to be closed. We need to make sure we are no
 		// longer using it.
 		mAdapter.swapCursor(null);
+	}
+	
+	public class ContactCursorAdapter extends SimpleCursorAdapter {
+
+		ImageLoader loader;
+		ContentResolver cr;
+		
+		public ContactCursorAdapter(Context context, int layout, Cursor c,
+				String[] from, int[] to, int flags) {
+			super(context, layout, c, from, to, flags);
+			loader = ImageLoader.get(context);
+			cr = context.getContentResolver();
+		}
+
+		@Override
+		public void bindView(View view, Context context, Cursor cursor) {
+			
+			ImageView photoView = (ImageView) view.findViewById(R.id.contact_photo);
+			TextView nameView = (TextView) view.findViewById(R.id.contact_name);
+			
+			int nameIndex = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
+			String name = cursor.getString(nameIndex);
+			
+			nameView.setText(name);
+			
+			int idIndex = cursor.getColumnIndex(ContactsContract.Contacts._ID);
+			long id = cursor.getLong(idIndex);
+			Uri uri = ContentUris.withAppendedId(
+					ContactsContract.Contacts.CONTENT_URI, id);
+			
+			InputStream input = ContactsContract.Contacts.openContactPhotoInputStream(cr, uri);
+			photoView.setImageBitmap(BitmapFactory.decodeStream(input));
+
+			/*int id = cursor.getColumnIndex(Phones.PERSON_ID);
+			Uri uri = ContentUris.withAppendedId(Phones.CONTENT_URI,
+					cursor.getLong(id));
+			String uriPhoto = uri.toString();
+			String uriPeople = uriPhoto.replace("phones", "people");
+
+			Uri uriFinal = Uri.parse(uriPeople);
+
+			Bitmap bitmap = People.loadContactPhoto(context, uriFinal,
+					R.drawable.avatar02, null);
+			imageView.setImageBitmap(bitmap);
+			super.bindView(view, context, cursor);*/
+		}
 	}
 
 }
