@@ -49,7 +49,7 @@ public class ContactListFragment extends ListFragment implements
 
 		// Give some text to display if there is no data. In a real
 		// application this would come from a resource.
-		setEmptyText("No phone numbers");
+		setEmptyText(getString(R.string.no_contacts));
 
 		// We have a menu item to show in action bar.
 		setHasOptionsMenu(true);
