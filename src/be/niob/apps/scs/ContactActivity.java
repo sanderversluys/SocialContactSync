@@ -2,6 +2,7 @@ package be.niob.apps.scs;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.v4.app.FragmentActivity;
 
 public class ContactActivity extends FragmentActivity implements ContactListFragment.OnContactSelectedListener {
@@ -21,7 +22,7 @@ public class ContactActivity extends FragmentActivity implements ContactListFrag
 		if (detail == null || !detail.isInLayout()) {
 			Intent showContact = new Intent(getApplicationContext(),
 		            ContactDetailActivity.class);
-			//showContact.setData(Uri.parse(linkUri));
+			showContact.putExtra(ContactsContract.Contacts._ID, id);
 		    startActivity(showContact);	
 		} else {
 			detail.updateContact(id);
