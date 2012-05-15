@@ -4,6 +4,7 @@
     <string name="hello">Hello World!</string>
     <string name="app_name">Social Contact Sync</string>
     
+    <string name="contacts">Contacts</string>
     <string name="no_contacts">No contacts</string>
 
 </resources>
