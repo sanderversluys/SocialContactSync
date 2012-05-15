@@ -2,6 +2,7 @@ package be.niob.apps.scs;
 
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.concurrent.RejectedExecutionException;
 
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -179,14 +180,19 @@ public class ContactListFragment extends ListFragment implements
 			Uri uri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, id);
 
 			loadPhoto(photoView, uri);
+			
 		}
 		
 		private void loadPhoto(ImageView imageView, Uri uri) {
 			imageView.setImageResource(R.drawable.person);
-			if (mPhotoMap.containsKey(imageView)) {
-				mPhotoMap.get(imageView).cancel(true);
+			if (mPhotoMap.containsKey(imageView))
+				mPhotoMap.get(imageView).cancel(false);
+			try {
+				mPhotoMap.put(imageView, (PhotoLoadTask) new PhotoLoadTask(imageView).execute(uri));	
+			} catch(RejectedExecutionException ex) {
+				Log.e(TAG, ex.getMessage());
 			}
-			mPhotoMap.put(imageView, (PhotoLoadTask) new PhotoLoadTask(imageView).execute(uri));
+			
 		}
 		
 		private class PhotoLoadTask extends AsyncTask<Uri, Void, Bitmap> {

@@ -1,17 +1,14 @@
 package be.niob.apps.scs;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
-import android.content.res.AssetFileDescriptor;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-import android.provider.ContactsContract.Contacts;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
