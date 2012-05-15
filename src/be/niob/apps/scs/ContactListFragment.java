@@ -1,16 +1,17 @@
 package be.niob.apps.scs;
 
 import java.io.InputStream;
-
-import com.google.android.imageloader.ImageLoader;
+import java.util.HashMap;
 
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.Contacts;
@@ -25,6 +26,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.google.android.imageloader.ImageLoader;
 
 public class ContactListFragment extends ListFragment implements
 		LoaderManager.LoaderCallbacks<Cursor> {
@@ -140,48 +143,76 @@ public class ContactListFragment extends ListFragment implements
 	
 	public class ContactCursorAdapter extends SimpleCursorAdapter {
 
-		ImageLoader loader;
-		ContentResolver cr;
+		private HashMap<ImageView, PhotoLoadTask> mPhotoMap;
 		
-		public ContactCursorAdapter(Context context, int layout, Cursor c,
+		ImageLoader mImageLoader;
+		ContentResolver mContentResolver;
+		
+		int nameIndex = -1;
+		int idIndex = -1;
+		int photoIndex = -1;
+		
+		public ContactCursorAdapter(Context context, int layout, Cursor cursor,
 				String[] from, int[] to, int flags) {
-			super(context, layout, c, from, to, flags);
-			loader = ImageLoader.get(context);
-			cr = context.getContentResolver();
+			super(context, layout, cursor, from, to, flags);
+			mImageLoader = ImageLoader.get(context);
+			mContentResolver = context.getContentResolver();
+			mPhotoMap = new HashMap<ImageView, ContactListFragment.ContactCursorAdapter.PhotoLoadTask>();
 		}
-
+		
 		@Override
 		public void bindView(View view, Context context, Cursor cursor) {
+			
+			if (nameIndex < 0) {
+				nameIndex = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
+				idIndex = cursor.getColumnIndex(ContactsContract.Contacts._ID);
+				photoIndex = cursor.getColumnIndex(ContactsContract.Contacts.PHOTO_ID);
+			}
 			
 			ImageView photoView = (ImageView) view.findViewById(R.id.contact_photo);
 			TextView nameView = (TextView) view.findViewById(R.id.contact_name);
 			
-			int nameIndex = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
 			String name = cursor.getString(nameIndex);
-			
 			nameView.setText(name);
 			
-			int idIndex = cursor.getColumnIndex(ContactsContract.Contacts._ID);
 			long id = cursor.getLong(idIndex);
-			Uri uri = ContentUris.withAppendedId(
-					ContactsContract.Contacts.CONTENT_URI, id);
-			
-			InputStream input = ContactsContract.Contacts.openContactPhotoInputStream(cr, uri);
-			photoView.setImageBitmap(BitmapFactory.decodeStream(input));
+			Uri uri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, id);
 
-			/*int id = cursor.getColumnIndex(Phones.PERSON_ID);
-			Uri uri = ContentUris.withAppendedId(Phones.CONTENT_URI,
-					cursor.getLong(id));
-			String uriPhoto = uri.toString();
-			String uriPeople = uriPhoto.replace("phones", "people");
-
-			Uri uriFinal = Uri.parse(uriPeople);
-
-			Bitmap bitmap = People.loadContactPhoto(context, uriFinal,
-					R.drawable.avatar02, null);
-			imageView.setImageBitmap(bitmap);
-			super.bindView(view, context, cursor);*/
+			loadPhoto(photoView, uri);
 		}
+		
+		private void loadPhoto(ImageView imageView, Uri uri) {
+			imageView.setImageResource(R.drawable.person);
+			if (mPhotoMap.containsKey(imageView)) {
+				mPhotoMap.get(imageView).cancel(true);
+			}
+			mPhotoMap.put(imageView, (PhotoLoadTask) new PhotoLoadTask(imageView).execute(uri));
+		}
+		
+		private class PhotoLoadTask extends AsyncTask<Uri, Void, Bitmap> {
+			
+			ImageView imageView;
+			
+			public PhotoLoadTask(ImageView imageView) {
+				this.imageView = imageView;
+			}
+
+			@Override
+			protected Bitmap doInBackground(Uri... params) {
+				InputStream input = ContactsContract.Contacts.openContactPhotoInputStream(mContentResolver, params[0]);
+				return BitmapFactory.decodeStream(input);
+			}
+			
+			@Override
+			protected void onPostExecute(Bitmap result) {
+				if (result != null)
+					imageView.setImageBitmap(result);
+			}
+			
+		}
+	
 	}
+	
+	
 
 }
