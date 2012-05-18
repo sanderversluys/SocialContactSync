@@ -32,11 +32,12 @@ public class ContactDetailFragment extends Fragment
 	implements LoaderManager.LoaderCallbacks<Cursor> {
  	
 	private static final String TAG = Util.TAG + ":ContactDetailFragment";
+
+	private long mContactId = -1;
 	
 	private ImageLoader mImageLoader;
 	
-	private ImageView mContactPhoto;
-	private LinearLayout mGravatars;
+	
 	
 	private Cursor emailCursor;
 	
@@ -45,8 +46,7 @@ public class ContactDetailFragment extends Fragment
 			Bundle savedInstanceState) {
 		View  view = inflater.inflate(R.layout.contact_detail, container);
 		mImageLoader = ImageLoader.get(getActivity());
-		mContactPhoto = (ImageView) view.findViewById(R.id.contact_photo);
-		mGravatars = (LinearLayout) view.findViewById(R.id.gravatars);
+		
 		return view;
 	}
 	
@@ -60,13 +60,17 @@ public class ContactDetailFragment extends Fragment
 	public void updateContact(long id) {
 		Log.i(TAG, "Update contact detail: " + id);
 		
-		showPhoto(id);
+		mContactId = id;
+		
+		//showPhoto(id);
 		
 		if (emailCursor != null)
 			emailCursor.close();
 		
 		getLoaderManager().restartLoader((int)id, null, this);
 	}
+	
+	
 	
 	private void showPhoto(long id) {
 		ContentResolver cr = getActivity().getContentResolver();
@@ -80,43 +84,43 @@ public class ContactDetailFragment extends Fragment
 		else
 			input = ContactsContract.Contacts.openContactPhotoInputStream(cr, uri);
 		
-		if (input != null) 
-			mContactPhoto.setImageBitmap(BitmapFactory.decodeStream(input));
+//		if (input != null) 
+//			mContactPhoto.setImageBitmap(BitmapFactory.decodeStream(input));
 	}
 	
-	private void showGravatar() {
-		
-		mGravatars.removeAllViews();
-		
-		if (emailCursor != null) {
-			
-			while (emailCursor.moveToNext()) {
-
-				String email = emailCursor
-						.getString(emailCursor
-								.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
-				String emailType = emailCursor
-						.getString(emailCursor
-								.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE));
-				
-				LayoutParams params = new LinearLayout.LayoutParams(
-						LinearLayout.LayoutParams.WRAP_CONTENT, 
-						LinearLayout.LayoutParams.WRAP_CONTENT);
-				
-				ImageView imageView = new ImageView(getActivity());
-				imageView.setLayoutParams(params);
-				imageView.setImageResource(R.drawable.person);
-				mGravatars.addView(imageView);
-				
-				mImageLoader.bind(imageView, Util.Gravatar.url(email), null);		
-				
-				break;
-			}
-
-		} else {
-			Log.d(TAG, "Cursor for email is not loaded");
-		}
-	}
+//	private void showGravatar() {
+//		
+//		mGravatars.removeAllViews();
+//		
+//		if (emailCursor != null) {
+//			
+//			while (emailCursor.moveToNext()) {
+//
+//				String email = emailCursor
+//						.getString(emailCursor
+//								.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
+//				String emailType = emailCursor
+//						.getString(emailCursor
+//								.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE));
+//				
+//				LayoutParams params = new LinearLayout.LayoutParams(
+//						LinearLayout.LayoutParams.WRAP_CONTENT, 
+//						LinearLayout.LayoutParams.WRAP_CONTENT);
+//				
+//				ImageView imageView = new ImageView(getActivity());
+//				imageView.setLayoutParams(params);
+//				imageView.setImageResource(R.drawable.person);
+//				mGravatars.addView(imageView);
+//				
+//				mImageLoader.bind(imageView, Util.Gravatar.url(email), null);		
+//				
+//				break;
+//			}
+//
+//		} else {
+//			Log.d(TAG, "Cursor for email is not loaded");
+//		}
+//	}
 	
 	static final String[] CONTACTS_SUMMARY_PROJECTION = new String[] {
 		Contacts._ID, 
@@ -138,7 +142,7 @@ public class ContactDetailFragment extends Fragment
 	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
 		Log.d(TAG, "Loader finished");
 		emailCursor = cursor;
-		showGravatar();
+		//showGravatar();
 	}
 
 	@Override

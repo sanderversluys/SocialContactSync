@@ -6,6 +6,7 @@ import java.net.URLStreamHandlerFactory;
 import android.app.Application;
 import android.content.Context;
 import android.os.Handler;
+import be.niob.apps.scs.service.SocialService;
 
 import com.google.android.imageloader.BitmapContentHandler;
 import com.google.android.imageloader.ImageLoader;
@@ -21,6 +22,7 @@ public class SCSApplication extends Application {
     public final static String TAG = Util.TAG + ":SCSApplication";
     
     private ImageLoader mImageLoader;
+    private SocialService mSocialService;
 	
     private static ImageLoader createImageLoader(Context context) {
         // Install the file cache (if it is not already installed)
@@ -52,11 +54,13 @@ public class SCSApplication extends Application {
     {
         super.onCreate();
         mImageLoader = createImageLoader(this);
+        mSocialService = new SocialService();
     }
     
     @Override
     public void onTerminate() {
         mImageLoader = null;
+        mSocialService = null;
         super.onTerminate();
     }
     
@@ -64,6 +68,8 @@ public class SCSApplication extends Application {
     public Object getSystemService(String name) {
         if (ImageLoader.IMAGE_LOADER_SERVICE.equals(name)) {
             return mImageLoader;
+        } else if (SocialService.NAME.equals(name)) {
+        	return mSocialService;
         } else {
             return super.getSystemService(name);
         }

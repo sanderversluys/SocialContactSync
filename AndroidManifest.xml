@@ -30,6 +30,9 @@
             android:name=".ContactDetailActivity"
             android:label="@string/app_name"/>
         
+        <service
+            android:name=".service.SocialService"/>
+        
     </application>
 
 </manifest>
